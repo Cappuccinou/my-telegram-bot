@@ -64,6 +64,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/суицид": "совершила суицид",
         "/заснуть": "уснула",
         "/улететь": "улетела в космос",
+        "/окно": "вышла в окно",
     }
 
 
