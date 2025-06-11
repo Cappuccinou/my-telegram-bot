@@ -1,52 +1,54 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 import os
 
-TOKEN = os.environ["BOT_TOKEN"]  # Токен будет добавлен на Render
+TOKEN = os.environ["BOT_TOKEN"]
 
-async def handle_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command = update.message.text.split()[0][1:]
-    sender = update.effective_user.first_name
-
-    # Определяем цель
-    if update.message.reply_to_message:
-        target = update.message.reply_to_message.from_user.first_name
-    elif context.args:
-        target = ' '.join(context.args)
-    else:
-        await update.message.reply_text("Укажи, кого " + command + ", например: /" + command + " @username или ответом на сообщение.")
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
         return
 
+    text = update.message.text.strip()
+    sender = update.effective_user.first_name
     actions = {
-        "обнять": "обняла",
-        "поцеловать": "поцеловала",
-        "погладить": "погладила",
-        "шлёпнуть": "шлёпнула",
-        "ударить": "ударила",
-        "лизнуть": "лизнула",
-        "похвалить": "похвалила",
-        "кусь": "кусьнула",
-        "прижать": "прижала",
-        "сесть": "села",
-        "облапать": "облапала",
-        "трахнуть": "трахнула",
-        "выебать": "выебала",
-        "отлизать": "отлизала",
-        "отстрапонить": "отстрапонила",
-        "пнуть": "пнула",
-        "покормить": "покормила",
-        "приподнять": "приподняла",
-        "укусить": "укусила",
+        "/обнять": "обняла",
+        "/поцеловать": "поцеловала",
+        "/погладить": "погладила",
+        "/шлёпнуть": "шлёпнула",
+        "/ударить": "ударила",
+        "/лизнуть": "лизнула",
+        "/похвалить": "похвалила",
+        "/кусь": "кусьнула",
+        "/прижать": "прижала",
+        "/сесть": "села",
+        "/облапать": "облапала",
+        "/трахнуть": "трахнула",
+        "/выебать": "выебала",
+        "/отлизать": "отлизала",
+        "/отстрапонить": "отстрапонила",
+        "/пнуть": "пнула",
+        "/покормить": "покормила",
+        "/приподнять": "приподняла",
+        "/укусить": "укусила",
     }
 
-    action_word = actions.get(command, command)
-    response = f"{sender} {action_word} {target}"
-    await update.message.reply_text(response)
+    
+    if text.split()[0] in actions:
+        action_verb = actions[text.split()[0]]
+
+        # Определяем, на кого была команда
+        if update.message.reply_to_message:
+            target = update.message.reply_to_message.from_user.first_name
+        elif len(text.split()) > 1:
+            target = " ".join(text.split()[1:])
+        else:
+            await update.message.reply_text("Пожалуйста, ответь на сообщение пользователя или укажи его после команды.")
+            return
+            
+        await update.message.reply_text(f"{sender} {action_verb} {target}")
+        return
 
 app = ApplicationBuilder().token(TOKEN).build()
-
-commands = ["обнять", "поцеловать", "ударить", "погладить", "шлёпнуть", "лизнуть", "похвалить", "кусь", "прижать", "сесть", "облапать", "трахнуть", "выебать", "отлизать", "отстрапонить", "пнуть", "покормить", "приподнять", "укусить"]
-for cmd in commands:
-    app.add_handler(CommandHandler(cmd, handle_action))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
 app.run_polling()
