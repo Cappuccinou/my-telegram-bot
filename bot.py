@@ -58,6 +58,19 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/отпиздить": "отпиздила",
     }
 
+     self_actions = {
+        "/умереть": "внезапно умерла",
+        "/суицид": "совершила суицид",
+        "/заснуть": "уснула",
+        "/улететь": "улетела в космос",
+    }
+
+
+    # Само-действия
+    if text.split()[0] in self_actions:
+        action_text = self_actions[text.split()[0]]
+        await update.message.reply_text(f"{sender} {action_text}")
+        return
     
     if text.split()[0] in actions:
         action_verb = actions[text.split()[0]]
@@ -72,7 +85,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
             
         await update.message.reply_text(f"{sender} {action_verb} {target}")
-        return
 
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
