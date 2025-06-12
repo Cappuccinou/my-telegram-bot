@@ -73,6 +73,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/обосрать": "обосрала",
         "/понюхать": "понюхала",
         "/закурить": "закурила",
+        "/сигарета": "потушила сигарету об",
     }
     
     self_actions = {
