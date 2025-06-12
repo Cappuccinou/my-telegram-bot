@@ -169,6 +169,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- Запуск приложения ---
 app = ApplicationBuilder().token(TOKEN).build()
+print("Start handler добавлен")
 app.add_handler(CommandHandler("start", start_handler))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
