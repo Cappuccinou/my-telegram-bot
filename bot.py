@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 import os
+import re
 
 TOKEN = os.environ["BOT_TOKEN"]
 
@@ -8,8 +9,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
 
-    text = update.message.text.strip()
-    sender = update.effective_user.first_name
     actions = {
         "/обнять": "обняла",
         "/чмокнуть": "чмокнула",
@@ -77,10 +76,11 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/окно": "вышла в окно",
         "/кончить": "кончила",
         "/зига": "плотно потянулась к солнцу",
-        "/обоссать": "обоссала всех",
-        "/обосрать": "обосрала всех",
     }
 
+    text = update.message.text.strip()
+    sender = update.effective_user.first_name
+    command = text.split()[0]
 
     # Само-действия
     if text.split()[0] in self_actions:
@@ -88,19 +88,28 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"{sender} {action_text}")
         return
     
-    if text.split()[0] in actions:
-        action_verb = actions[text.split()[0]]
+    # --- Действия с целью ---
+    if command in actions:
+        action_verb = actions[command]
 
-        # Определяем, на кого была команда
-        if update.message.reply_to_message:
+        # 1. Приоритет: @username
+        mentioned_users = re.findall(r'@[\w\d_]+', text)
+        if mentioned_users:
+            target = mentioned_users[0]
+
+        # 2. Если нет @ — проверяем ответ на сообщение
+        elif update.message.reply_to_message:
             target = update.message.reply_to_message.from_user.first_name
+
+        # 3. Если указано имя после команды
         elif len(text.split()) > 1:
             target = " ".join(text.split()[1:])
+
+        # 4. Если вообще никого не указали — обнимаем всех
         else:
-            await update.message.reply_text("Пожалуйста, ответь на сообщение пользователя или укажи его после команды.")
-            return
-            
+            target = "всех"
         await update.message.reply_text(f"{sender} {action_verb} {target}")
+
 
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
