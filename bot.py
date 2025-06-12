@@ -81,6 +81,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/застрелить": "застрелила",
         "/врот": "плюнула в рот",
         "/придушить": "придушила",
+        "/дать": "дала",
+        "/забрать": "забрала",
     }
     
     self_actions = {
