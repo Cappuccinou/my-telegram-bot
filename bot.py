@@ -1,7 +1,13 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 import os
 import re
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    MessageHandler,
+    CommandHandler,
+    ContextTypes,
+    filters,
+)
 
 TOKEN = os.environ["BOT_TOKEN"]
 
@@ -13,6 +19,17 @@ def escape(text: str) -> str:
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
+
+# --- Обработчик /start ---
+async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    name = escape(user.first_name)
+    await update.message.reply_text(
+        f"Привет, [{name}](tg://user?id={user.id})! 👋\n"
+        "Я раб партии, созданный только для служения своим хозяйкам. Госпожа, используйте меня для команд вроде:\n"
+        "`/обнять`, `/поцеловать`, `/ударить`, `/умереть`, и другие.",
+        parse_mode="MarkdownV2"
+    )
 
     actions = {
         "/обнять": "обняла",
@@ -141,6 +158,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start_handler))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
 app.run_polling()
