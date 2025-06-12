@@ -142,29 +142,41 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if command in actions:
         action_verb = actions[command]
 
-        # 1. Приоритет — @username
-        mentioned_users = re.findall(r'@[\w\d_]+', text)
-        if mentioned_users:
-            target = mentioned_users[0]  # Telegram сам делает ссылку
+    # Убираем команду из текста и разбиваем остальное
+    words = text.split()[1:]
+    target = None
+    extra = ""
 
-        # 2. Ответ на сообщение
-        elif update.message.reply_to_message:
-            target_user = update.message.reply_to_message.from_user
-            target_name = escape(target_user.first_name)
-            target = f"[{target_name}](tg://user?id={target_user.id})"
+    # 1. Ищем @юзера
+    for i, word in enumerate(words):
+        if word.startswith("@"):
+            target = word
+            extra = " ".join(words[:i])  # всё до @
+            break
 
-        # 3. Имя после команды
-        elif len(text.split()) > 1:
-            target = escape(" ".join(text.split()[1:]))
+    # 2. Если reply
+    if not target and update.message.reply_to_message:
+        target_user = update.message.reply_to_message.from_user
+        target_name = escape(target_user.first_name)
+        target = f"[{target_name}](tg://user?id={target_user.id})"
+        extra = " ".join(words)
 
-        # 4. Никого не указали
-        else:
-            target = "всех 🫂"
+    # 3. Если указали цель просто текстом
+    if not target and words:
+        target = escape(words[-1])
+        extra = " ".join(words[:-1])
 
-        await update.message.reply_text(
-            f"{sender} {action_verb} {target}",
-            parse_mode="MarkdownV2"
-        )
+    # 4. Никого не указали
+    if not target:
+        target = "всех 🫂"
+        extra = " ".join(words)
+
+    # Сообщение
+    full_action = f"{action_verb} {escape(extra)}".strip()
+    await update.message.reply_text(
+        f"{sender} {full_action} {target}",
+        parse_mode="MarkdownV2"
+    )
 
 
 # --- Запуск приложения ---
