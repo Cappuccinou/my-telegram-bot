@@ -5,6 +5,11 @@ import re
 
 TOKEN = os.environ["BOT_TOKEN"]
 
+# --- Экранирование спецсимволов для MarkdownV2 ---
+def escape(text: str) -> str:
+    escape_chars = r"\_*[]()~`>#+-=|{}.!"
+    return ''.join(f"\\{c}" if c in escape_chars else c for c in text)
+
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
@@ -66,6 +71,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/воскресить": "воскресила",
         "/обоссать": "обоссала",
         "/обосрать": "обосрала",
+        "/понюхать": "понюхала",
     }
     
     self_actions = {
@@ -79,36 +85,43 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
 
     text = update.message.text.strip()
-    sender = update.effective_user.first_name
     command = text.split()[0]
 
+     # Кликабельное имя отправителя
+    sender_name = escape(update.effective_user.first_name)
+    sender = f"[{sender_name}](tg://user?id={update.effective_user.id})"
+
+    
     # Само-действия
-    if text.split()[0] in self_actions:
-        action_text = self_actions[text.split()[0]]
-        await update.message.reply_text(f"{sender} {action_text}")
+    if command in self_actions:
+        action_text = self_actions[command]
+        await update.message.reply_text(
+            f"{sender} {action_text}",
+            parse_mode="MarkdownV2"
+        )
         return
     
-    # --- Действия с целью ---
+ # --- Действия с целью ---
     if command in actions:
         action_verb = actions[command]
 
-        # 1. Приоритет: @username
+        # 1. Ищем @username
         mentioned_users = re.findall(r'@[\w\d_]+', text)
         if mentioned_users:
-            target = mentioned_users[0]
-
-        # 2. Если нет @ — проверяем ответ на сообщение
+            target = mentioned_users[0]  # Telegram сам сделает кликабельным
         elif update.message.reply_to_message:
-            target = update.message.reply_to_message.from_user.first_name
-
-        # 3. Если указано имя после команды
+            target_user = update.message.reply_to_message.from_user
+            target_name = escape(target_user.first_name)
+            target = f"[{target_name}](tg://user?id={target_user.id})"
         elif len(text.split()) > 1:
-            target = " ".join(text.split()[1:])
-
-        # 4. Если вообще никого не указали — обнимаем всех
+            target = escape(" ".join(text.split()[1:]))
         else:
-            target = "всех"
-        await update.message.reply_text(f"{sender} {action_verb} {target}")
+            target = "всех 🫂"
+
+        await update.message.reply_text(
+            f"{sender} {action_verb} {target}",
+            parse_mode="MarkdownV2"
+        )
 
 
 app = ApplicationBuilder().token(TOKEN).build()
