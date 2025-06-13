@@ -114,19 +114,6 @@ self_actions = {
     }
 
 
-
-# --- Обработчик /start ---
-async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    name = escape(user.first_name)
-    await update.message.reply_text(
-        f"Привет, [{name}](tg://user?id={user.id})! 👋\n"
-        "Я раб партии ФемУМ, созданный проислуживать своим хозяйкам. Госпожа, используйте команды вроде:\n"
-        "`/обнять`, `/поцеловать`, `/ударить`, `/умереть`, и другие.",
-        parse_mode="MarkdownV2"
-    )
-
-
 # --- Обработка всех текстовых сообщений ---
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
@@ -142,6 +129,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- Само-действия ---
     if command in self_actions:
         action_text = self_actions[command]
+        words = text.split()[1:]  # всё, что после команды
+        extra = " ".join(words)
+        if extra:
+            action_text = f"{action_text} {escape(extra)}"
         await update.message.reply_text(
             f"{sender} {action_text}",
             parse_mode="MarkdownV2"
