@@ -113,18 +113,6 @@ self_actions = {
         "/овуляция": "полыхает от желания раздеть и разделить страсть любви",
     }
 
-
-# --- Обработчик /start ---
-async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):More actions
-    user = update.effective_user
-    name = escape(user.first_name)
-    await update.message.reply_text(
-        f"Привет, [{name}](tg://user?id={user.id})! 👋\n"
-        "Я раб партии ФемУМ, созданный проислуживать своим хозяйкам. Госпожа, используйте команды вроде:\n"
-        "`/обнять`, `/поцеловать`, `/ударить`, `/умереть`, и другие.",
-        parse_mode="MarkdownV2"
-    )
-
 # --- Обработка всех текстовых сообщений ---
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
@@ -193,8 +181,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- Запуск приложения ---
 app = ApplicationBuilder().token(TOKEN).build()
-print("Start handler добавлен")
-app.add_handler(CommandHandler("start", start_handler))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
 app.run_polling()
