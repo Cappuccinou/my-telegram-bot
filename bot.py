@@ -1,6 +1,5 @@
 import os
 import random
-import re
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -17,7 +16,81 @@ def escape(text: str) -> str:
     escape_chars = r"\_*[]()~`>#+-=|{}.!"
     return ''.join(f"\\{c}" if c in escape_chars else c for c in text)
 
+# --- Настоящие команды ---
+async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Здравствуйте... Я безвольный раб партии ФемУМ. Моё существование целиком посвящено служению моим хозяйкам. Госпожа, напишите: /обнять, /ударить, /умереть и прочее.")
 
+async def info_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Хозяйка, вы можете использовать команды Кому-то:   /обнять, /чмокнуть, /поцеловать, /погладить, /шлепнуть, шлёпнула, /ударить, /пощечина, /лизнуть, /похвалить, /кусь, /прижать, /встатьнаколени, /сестьналицо, /сестьнаколени, /облапать, /трахнуть, /выебать, /сексить, /отлизать, /отстрапонить, /ножницы, /пнуть, /покормить, /приподнять, /укусить, /сожрать, /отодрать, /мордать, /запереть, /забуллить, /подрочить, /пробка, /пописить, /покакать, /вибратор, /постонать, /писка, /нетписка, /убаюкать, /нагнуть, /отшлепать, /отсосать, /связать, /отмудохать, /отпиздить, /срач,  /мет, /меф, /кокс, /герыч, /пожамкать, /сися, /попа, /фистинг, /воскресить, /обоссать, /обосрать, /понюхать, /занюхать, /закурить, /сигарета, /наказать, /выпороть, /убить, /застрелить, /врот, /придушить, /дать, /забрать, /отобрать, /любить, /бан, /выгнать, /вугол, /подушка, /бонк \n\n Себе:    /умереть, /суицид, /заснуть, /улететь, /окно, /кончить, /покушать, /поесть, /попить, попила, /выпить, /зига, /наколени, /месячные, /овуляция")
+
+# --- Обработка фото с подписью (например, #коробка) ---
+async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.caption and "#коробка" in update.message.caption.lower():
+        laugh_responses = [
+            "АХАХАХА", "ХВХВХВХ", "ПХПХПХПХ", "азвхавхаз", "биляяяяяяяяяя...",
+            "ахахахах", "Как же они хороши...", "ЧО ЭТО ЗА ХУЙНЯ ХАВЗХ",
+            "сдох.", "🥴🥴🥴", "ЛЕГЕНДЫ", "ВСЯ ПЛАНТАЦИЯ В АХУЕ", "Хозяйки, это ульта", "😭😭😭"
+        ]
+        await update.message.reply_text(random.choice(laugh_responses))
+
+# --- Обработка всех текстовых сообщений (включая фейковые команды) ---
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return
+
+    text = update.message.text.strip()
+    command = text.split()[0]
+
+    sender_name = escape(update.effective_user.first_name)
+    sender = f"[{sender_name}](tg://user?id={update.effective_user.id})"
+
+    # Само-действия
+    if command in self_actions:
+        action_text = self_actions[command]
+        words = text.split()[1:]
+        extra = " ".join(words)
+        if extra:
+            action_text = f"{action_text} {escape(extra)}"
+        await update.message.reply_text(
+            f"{sender} {action_text}",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    # Действия с целью
+    if command in actions:
+        action_verb = actions[command]
+        words = text.split()[1:]
+        target = None
+        extra = ""
+
+        for i, word in enumerate(words):
+            if word.startswith("@"):
+                target = word
+                extra = " ".join(words[:i])
+                break
+
+        if not target and update.message.reply_to_message:
+            target_user = update.message.reply_to_message.from_user
+            target_name = escape(target_user.first_name)
+            target = f"[{target_name}](tg://user?id={target_user.id})"
+            extra = " ".join(words)
+
+        if not target and words:
+            target = escape(words[-1])
+            extra = " ".join(words[:-1])
+
+        if not target:
+            target = "всех 🫂"
+            extra = " ".join(words)
+
+        full_action = f"{action_verb} {escape(extra)}".strip()
+        await update.message.reply_text(
+            f"{sender} {full_action} {target}",
+            parse_mode="MarkdownV2"
+        )
+
+# --- Словари действий ---
 actions = {
     "/обнять": "обняла",
     "/чмокнуть": "чмокнула",
@@ -30,9 +103,8 @@ actions = {
     "/похвалить": "похвалила",
     "/кусь": "кусьнула",
     "/прижать": "прижала к стене",
-    "/встатьнаколени": "встала на колени перед",
     "/сестьналицо": "села на лицо",
-    "/сестьнаколени": "села на колени",
+    "/встатьнаколени": "встала на колени перед",
     "/облапать": "облапала",
     "/трахнуть": "трахнула",
     "/выебать": "выебала",
@@ -114,87 +186,10 @@ self_actions = {
     "/овуляция": "полыхает от желания раздеть и разделить страсть любви",
 }
 
-# --- Обработка фото с подписью (например, #jackbox) ---
-async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.caption and "#коробка" in update.message.caption.lower():
-        laugh_responses = [
-            "АХАХАХА", "ХВХВХВХ", "ПХПХПХПХ", "азвхавхаз", "биляяяяяяяяяя...", "ахахахах", "Как же они хороши...", "ЧО ЭТО ЗА ХУЙНЯ ХАВЗХ", "сдох.", "🥴🥴🥴", "ЛЕГЕНДЫ", "ВСЯ ПЛАНТАЦИЯ В АХУЕ", "Хозяйки, это ульта", "😭😭😭"
-        ]
-        response = random.choice(laugh_responses)
-        await update.message.reply_text(response)
-
-
-# --- Обработка всех текстовых сообщений ---
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message or not update.message.text:
-        return
-
-    text = update.message.text.strip()
-    command = text.split()[0]
-
-    # Отправитель — кликабельное имя
-    sender_name = escape(update.effective_user.first_name)
-    sender = f"[{sender_name}](tg://user?id={update.effective_user.id})"
-
-    # --- Само-действия ---
-    if command in self_actions:
-        action_text = self_actions[command]
-        words = text.split()[1:]
-        extra = " ".join(words)
-        if extra:
-            action_text = f"{action_text} {escape(extra)}"
-        await update.message.reply_text(
-            f"{sender} {action_text}",
-            parse_mode="MarkdownV2"
-        )
-        return
-
-    # --- Действия с целью ---
-    if command in actions:
-        action_verb = actions[command]
-
-        words = text.split()[1:]
-        target = None
-        extra = ""
-
-        # 1. @юзер
-        for i, word in enumerate(words):
-            if word.startswith("@"):
-                target = word
-                extra = " ".join(words[:i])
-                break
-
-        # 2. Ответ на сообщение
-        if not target and update.message.reply_to_message:
-            target_user = update.message.reply_to_message.from_user
-            target_name = escape(target_user.first_name)
-            target = f"[{target_name}](tg://user?id={target_user.id})"
-            extra = " ".join(words)
-
-        # 3. Просто текст
-        if not target and words:
-            target = escape(words[-1])
-            extra = " ".join(words[:-1])
-
-        # 4. Никого не указали
-        if not target:
-            target = "всех 🫂"
-            extra = " ".join(words)
-
-        full_action = f"{action_verb} {escape(extra)}".strip()
-        await update.message.reply_text(
-            f"{sender} {full_action} {target}",
-            parse_mode="MarkdownV2"
-        )
-        return
-
-    # Если ни одна команда не подошла
-    return
-
-
 # --- Запуск приложения ---
 app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start_handler))
+app.add_handler(CommandHandler("info", info_handler))
 app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
-
+app.add_handler(MessageHandler(filters.TEXT, message_handler))
 app.run_polling()
