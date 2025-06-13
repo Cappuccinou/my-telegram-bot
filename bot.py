@@ -1,4 +1,5 @@
 import os
+import random
 import re
 from telegram import Update
 from telegram.ext import (
@@ -113,6 +114,16 @@ self_actions = {
     "/овуляция": "полыхает от желания раздеть и разделить страсть любви",
 }
 
+# --- Обработка фото с подписью (например, #jackbox) ---
+async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.caption and "#коробка" in update.message.caption.lower():
+        laugh_responses = [
+            "АХАХАХА", "ХВХВХВХ", "ПХПХПХПХ", "азвхавхаз", "биляяяяяяяяяя...", "ахахахах", "Как же они хороши...", "ЧО ЭТО ЗА ХУЙНЯ ХАВЗХ", "сдох.", "🥴🥴🥴", "ЛЕГЕНДЫ", "ВСЯ ПЛАНТАЦИЯ В АХУЕ", "Хозяйки, это ульта", "😭😭😭"
+        ]
+        response = random.choice(laugh_responses)
+        await update.message.reply_text(response)
+
+
 # --- Обработка всех текстовых сообщений ---
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
@@ -183,6 +194,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- Запуск приложения ---
 app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
 app.run_polling()
