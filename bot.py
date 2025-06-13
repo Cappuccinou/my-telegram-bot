@@ -94,24 +94,24 @@ actions = {
     "/вугол": "поставила в угол",
     "/подушка": "положила подушку под колени",
     "/бонк": "пизданула по башке",
-    }
-    
+}
+
 self_actions = {
-        "/умереть": "внезапно умерла",
-        "/суицид": "совершила суицид",
-        "/заснуть": "уснула",
-        "/улететь": "улетела в космос",
-        "/окно": "вышла в окно",
-        "/кончить": "кончила",
-        "/покушать": "покушала",
-        "/поесть": "поела",
-        "/попить": "попила",
-        "/выпить": "выпила",
-        "/зига": "плотно потянулась к солнцу",
-        "/наколени": "встала на колени",
-        "/месячные": "истекает благородной кровью",
-        "/овуляция": "полыхает от желания раздеть и разделить страсть любви",
-    }
+    "/умереть": "внезапно умерла",
+    "/суицид": "совершила суицид",
+    "/заснуть": "уснула",
+    "/улететь": "улетела в космос",
+    "/окно": "вышла в окно",
+    "/кончить": "кончила",
+    "/покушать": "покушала",
+    "/поесть": "поела",
+    "/попить": "попила",
+    "/выпить": "выпила",
+    "/зига": "плотно потянулась к солнцу",
+    "/наколени": "встала на колени",
+    "/месячные": "истекает благородной кровью",
+    "/овуляция": "полыхает от желания раздеть и разделить страсть любви",
+}
 
 # --- Обработка всех текстовых сообщений ---
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -128,7 +128,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- Само-действия ---
     if command in self_actions:
         action_text = self_actions[command]
-        words = text.split()[1:]  # всё, что после команды
+        words = text.split()[1:]
         extra = " ".join(words)
         if extra:
             action_text = f"{action_text} {escape(extra)}"
@@ -142,41 +142,43 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if command in actions:
         action_verb = actions[command]
 
-    # Убираем команду из текста и разбиваем остальное
-    words = text.split()[1:]
-    target = None
-    extra = ""
+        words = text.split()[1:]
+        target = None
+        extra = ""
 
-    # 1. Ищем @юзера
-    for i, word in enumerate(words):
-        if word.startswith("@"):
-            target = word
-            extra = " ".join(words[:i])  # всё до @
-            break
+        # 1. @юзер
+        for i, word in enumerate(words):
+            if word.startswith("@"):
+                target = word
+                extra = " ".join(words[:i])
+                break
 
-    # 2. Если reply
-    if not target and update.message.reply_to_message:
-        target_user = update.message.reply_to_message.from_user
-        target_name = escape(target_user.first_name)
-        target = f"[{target_name}](tg://user?id={target_user.id})"
-        extra = " ".join(words)
+        # 2. Ответ на сообщение
+        if not target and update.message.reply_to_message:
+            target_user = update.message.reply_to_message.from_user
+            target_name = escape(target_user.first_name)
+            target = f"[{target_name}](tg://user?id={target_user.id})"
+            extra = " ".join(words)
 
-    # 3. Если указали цель просто текстом
-    if not target and words:
-        target = escape(words[-1])
-        extra = " ".join(words[:-1])
+        # 3. Просто текст
+        if not target and words:
+            target = escape(words[-1])
+            extra = " ".join(words[:-1])
 
-    # 4. Никого не указали
-    if not target:
-        target = "всех 🫂"
-        extra = " ".join(words)
+        # 4. Никого не указали
+        if not target:
+            target = "всех 🫂"
+            extra = " ".join(words)
 
-    # Сообщение
-    full_action = f"{action_verb} {escape(extra)}".strip()
-    await update.message.reply_text(
-        f"{sender} {full_action} {target}",
-        parse_mode="MarkdownV2"
-    )
+        full_action = f"{action_verb} {escape(extra)}".strip()
+        await update.message.reply_text(
+            f"{sender} {full_action} {target}",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    # Если ни одна команда не подошла
+    return
 
 
 # --- Запуск приложения ---
