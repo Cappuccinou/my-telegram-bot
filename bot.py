@@ -42,6 +42,7 @@ async def stats_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"👤 Ваша статистика, Госпожа:\n{result}",
         parse_mode="MarkdownV2"
+    )
 
 # --- Обработка любых сообщений с хэштегами ---
 async def hashtag_reaction_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
