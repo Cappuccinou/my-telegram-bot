@@ -231,10 +231,17 @@ self_actions = {
 
 # --- Запуск приложения ---
 app = ApplicationBuilder().token(TOKEN).build()
+
+# Команды
 app.add_handler(CommandHandler("start", start_handler))
 app.add_handler(CommandHandler("info", info_handler))
 app.add_handler(CommandHandler("stats", stats_handler))
-app.add_handler(MessageHandler(filters.ALL, hashtag_reaction_handler))  # универсальный по всем типам
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))  # твой основной
+
+# Основные команды /обнять, /ударить, /умереть и т.п. (обрабатываются вручную)
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+
+# Хэштеги — только текст и подписи, исключая команды
+hashtag_filter = (filters.TEXT | filters.Caption) & ~filters.COMMAND
+app.add_handler(MessageHandler(hashtag_filter, hashtag_reaction_handler))
 
 app.run_polling()
