@@ -232,7 +232,6 @@ app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start_handler))
 app.add_handler(CommandHandler("info", info_handler))
 app.add_handler(CommandHandler("stats", stats_handler))
-app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
 app.add_handler(MessageHandler(filters.ALL, hashtag_reaction_handler))  # универсальный по всем типам
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))  # твой основной
 
