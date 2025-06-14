@@ -237,10 +237,14 @@ self_actions = {
 
 # --- Запуск приложения ---
 app = ApplicationBuilder().token(TOKEN).build()
+
+# Обработчики команд (не сообщений)
 app.add_handler(CommandHandler("start", start_handler))
 app.add_handler(CommandHandler("info", info_handler))
 app.add_handler(CommandHandler("stats", stats_handler))
-app.add_handler(MessageHandler(filters.ALL, hashtag_reaction_handler))  # универсальный по всем типам
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))  # твой основной
+
+# Обработчики сообщений (с правильным порядком)
+app.add_handler(MessageHandler(filters.TEXT, message_handler), group=1)  # Сначала текст (включая команды)
+app.add_handler(MessageHandler(filters.ALL, hashtag_reaction_handler), group=2)  # Затем хэштеги
 
 app.run_polling()
