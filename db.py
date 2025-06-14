@@ -1,13 +1,25 @@
 import asyncpg
 import os
+import urllib.parse
 
-DB_URL = os.environ["DATABASE_URL"]  # переменная окружения с твоей PostgreSQL ссылкой
+# Разбор DATABASE_URL вручную
+DATABASE_URL = os.environ["DATABASE_URL"]
+parsed = urllib.parse.urlparse(DATABASE_URL)
+
+DB_CONFIG = {
+    "user": parsed.username,
+    "password": parsed.password,
+    "database": parsed.path[1:],  # убрать /
+    "host": parsed.hostname,
+    "port": parsed.port or 5432,
+    "ssl": "require",  # 🔥 ВАЖНО для Supabase!
+}
 
 async def insert_interaction(from_user, to_user, command: str):
     if not to_user:
         return
 
-    conn = await asyncpg.connect(DB_URL)
+    conn = await asyncpg.connect(**DB_CONFIG)
     await conn.execute(
         """
         INSERT INTO interactions (from_id, from_name, to_id, to_name, command)
@@ -22,13 +34,16 @@ async def insert_interaction(from_user, to_user, command: str):
     await conn.close()
 
 async def get_user_stats(user_id: int):
-    conn = await asyncpg.connect(DB_URL)
-    rows = await conn.fetch("""
+    conn = await asyncpg.connect(**DB_CONFIG)
+    rows = await conn.fetch(
+        """
         SELECT command, COUNT(*) as count
         FROM interactions
         WHERE to_id = $1
         GROUP BY command
         ORDER BY count DESC
-    """, user_id)
+        """,
+        user_id
+    )
     await conn.close()
     return rows
