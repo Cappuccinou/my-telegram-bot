@@ -20,3 +20,15 @@ async def insert_interaction(from_user, to_user, command: str):
         command
     )
     await conn.close()
+
+async def get_user_stats(user_id: int):
+    conn = await asyncpg.connect(DB_URL)
+    rows = await conn.fetch("""
+        SELECT command, COUNT(*) as count
+        FROM interactions
+        WHERE to_id = $1
+        GROUP BY command
+        ORDER BY count DESC
+    """, user_id)
+    await conn.close()
+    return rows
