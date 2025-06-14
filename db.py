@@ -1,11 +1,11 @@
 import asyncpg
 import os
 
-DB_URL = os.environ["DATABASE_URL"]
+DB_URL = os.environ["DATABASE_URL"]  # переменная окружения с твоей PostgreSQL ссылкой
 
 async def insert_interaction(from_user, to_user, command: str):
     if not to_user:
-        return  # никуда сохранять, если цель неизвестна
+        return
 
     conn = await asyncpg.connect(DB_URL)
     await conn.execute(
