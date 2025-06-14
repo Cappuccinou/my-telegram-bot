@@ -41,12 +41,15 @@ async def stats_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # --- Обработка фото с хэштегом ---
-async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message.caption:
+async def hashtag_reaction_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message
+    text = msg.caption or msg.text  # caption — для медиа, text — для обычных сообщений
+
+    if not text:
         return
 
-    caption = update.message.caption.lower()
-
+    text = text.lower()
+    
     hashtag_reactions = {
         "#коробка": ["АХАХАХА", "ХВХВХВХ", "ПХПХПХПХ", "азвхавхаз", "биляяяяяяяяяя...","ахахахах", "Как же они хороши...", "ЧО ЭТО ЗА ХУЙНЯ ХАВЗХ", "сдох.", "🥴🥴🥴", "ЛЕГЕНДЫ", "ВСЯ ПЛАНТАЦИЯ В АХУЕ", "Хозяйки, это ульта", "😭😭😭", "ЩА СДОХНУ ЗАХВЗАВАЗ", "БИЛЯЯЯ", "НИХУЯ СЕ ВХЗАХВ", "Господь всемогущий...", "Бога на вас нет", "Хозяйки, вы какие-то жёсткие...", "БЛЯТЬ ВЫ ЧЕГО ЫВАЗЩХАЩЗХ", "КАКОГО ХУЯ", "Не, ну это пиздец уже"],
         "#икра": ["Рафаель вообще весь класс супер муа муа", "🎣", "😈", "Писка риса у этого мальчика тоже вкусная", "@ottirr @feverchaan и @my_way_is_fraud смотрите", "Сигнал, что пора дрочить", "О, муж Рыбодрочерок", "Ебабельного снова кидают", "Уву тяночка", "Я б его мпрегнул", "МЯУ", "Ну какой же он восхитительный...", "Он прекрасен", "Молюсь на Рафаэля", "Я на него всю жизнь бы работал, лишь бы быть рядом и смотреть на него...", "Божественно красивый", "Ни с чем не сравнимый", "Я б ему дал."],
@@ -57,8 +60,8 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
 
     for hashtag, responses in hashtag_reactions.items():
-        if hashtag in caption:
-            await update.message.reply_text(random.choice(responses))
+        if hashtag in text:
+            await msg.reply_text(random.choice(responses))
             return
 
 # --- Обработка всех текстовых сообщений (включая фейковые команды) ---
@@ -230,5 +233,7 @@ app.add_handler(CommandHandler("start", start_handler))
 app.add_handler(CommandHandler("info", info_handler))
 app.add_handler(CommandHandler("stats", stats_handler))
 app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
-app.add_handler(MessageHandler(filters.TEXT, message_handler))
+app.add_handler(MessageHandler(filters.ALL, hashtag_reaction_handler))  # универсальный по всем типам
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))  # твой основной
+
 app.run_polling()
