@@ -26,7 +26,11 @@ async def info_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def stats_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    rows = await get_user_stats(user.id)
+    try:
+        rows = await get_user_stats(user.id)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Ошибка при получении статистики: {e}")
+        return
 
     if not rows:
         await update.message.reply_text("Прошу извинить раба Вашего. 🙇🏿‍♂️ Но про вас, Хозяйка, пока ничего не записано.")
@@ -38,7 +42,6 @@ async def stats_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"👤 Ваша статистика, Госпожа:\n{result}",
         parse_mode="MarkdownV2"
-    )
 
 # --- Обработка любых сообщений с хэштегами ---
 async def hashtag_reaction_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
