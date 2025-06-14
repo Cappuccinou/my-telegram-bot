@@ -3,26 +3,26 @@ import os
 import urllib.parse
 import socket
 
-# Разбираем DATABASE_URL
 DATABASE_URL = os.environ["DATABASE_URL"]
 parsed = urllib.parse.urlparse(DATABASE_URL)
 
-# Принудительное IPv4-подключение
-DB_CONFIG = {
-    "host": socket.gethostbyname(parsed.hostname),  # IPv4 адрес вместо домена
-    "port": parsed.port or 5432,
-    "user": parsed.username,
-    "password": parsed.password,
-    "database": parsed.path.lstrip("/"),
-    "ssl": "require",  # Supabase требует SSL
-    "family": socket.AF_INET  # только IPv4
-}
+async def get_connection():
+    host = socket.gethostbyname(parsed.hostname)  # DNS lookup внутри функции
+    return await asyncpg.connect(
+        host=host,
+        port=parsed.port or 5432,
+        user=parsed.username,
+        password=parsed.password,
+        database=parsed.path.lstrip("/"),
+        ssl="require",
+        family=socket.AF_INET
+    )
 
 async def insert_interaction(from_user, to_user, command: str):
     if not to_user:
         return
 
-    conn = await asyncpg.connect(**DB_CONFIG)
+    conn = await get_connection()
     await conn.execute(
         """
         INSERT INTO interactions (from_id, from_name, to_id, to_name, command)
@@ -37,7 +37,7 @@ async def insert_interaction(from_user, to_user, command: str):
     await conn.close()
 
 async def get_user_stats(user_id: int):
-    conn = await asyncpg.connect(**DB_CONFIG)
+    conn = await get_connection()
     rows = await conn.fetch(
         """
         SELECT command, COUNT(*) as count
