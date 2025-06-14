@@ -1,5 +1,5 @@
 import os
-from db import insert_interaction
+from db import insert_interaction, get_user_stats
 import random
 from telegram import Update
 from telegram.ext import (
