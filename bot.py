@@ -1,6 +1,7 @@
 import os
 from db import insert_interaction, get_user_stats
 import random
+import traceback
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -29,7 +30,8 @@ async def stats_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         rows = await get_user_stats(user.id)
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка при получении статистики: {e}")
+        tb = traceback.format_exc()
+        await update.message.reply_text(f"⚠️ Ошибка при получении статистики:\n```{tb}```", parse_mode="Markdown")
         return
 
     if not rows:
