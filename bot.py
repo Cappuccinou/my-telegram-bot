@@ -99,29 +99,32 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         target = None
         extra = ""
 
+        # --- приоритет 1: @username ---
         for i, word in enumerate(words):
             if word.startswith("@"):
-                target = word
+                target = escape(word)
                 extra = " ".join(words[:i])
                 break
 
+        # --- приоритет 2: reply на сообщение ---
         if not target and update.message.reply_to_message:
             target_user = update.message.reply_to_message.from_user
             target_name = escape(target_user.first_name)
             target = f"[{target_name}](tg://user?id={target_user.id})"
             extra = " ".join(words)
 
+        # --- приоритет 3: просто текст (последнее слово) ---
         if not target and words:
             target = escape(words[-1])
             extra = " ".join(words[:-1])
 
+        # --- fallback: никого не указали
         if not target:
             target = "всех 🫂"
             extra = " ".join(words)
 
         full_action = f"{action_verb} {escape(extra)}".strip()
         await update.message.reply_text(f"{sender} {full_action} {target}", parse_mode="MarkdownV2")
-
 
 # --- Словари действий ---
 actions = {
